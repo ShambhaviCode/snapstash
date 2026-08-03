@@ -1,0 +1,98 @@
+Build a mobile app called "SnapStash" — a fast snippet manager for saving and 
+retrieving reusable text, links, code, and images. Target iOS and Android via 
+React Native / Expo.
+
+CORE PURPOSE
+A power-user tool for quickly capturing and finding reusable content — think 
+"clipboard manager meets note app," optimized for speed over features.
+
+MAIN SCREENS
+
+1. Home / Library
+   - Search bar pinned at top, filters results instantly as you type (across 
+     title, content, and tags)
+   - List of saved items, most recently used at top
+   - Each item shows: content-type icon (text/link/code/image), preview 
+     snippet (first ~60 chars), folder tag, last-used timestamp
+   - Tap item = copy to clipboard instantly + toast confirmation "Copied!"
+   - Long-press item = edit/delete/move to folder
+   - Floating "+" button to add new snippet
+
+2. Add/Edit Snippet
+   - Large text input for content (auto-detect if it's a URL, code block, or 
+     plain text based on pattern matching — show a small icon confirming 
+     detected type)
+   - Optional title field (auto-suggest from first line if left blank)
+   - Folder picker (existing folders + "create new")
+   - Tag input (comma-separated or chip-style)
+   - Save button
+
+3. Folders
+   - Grid or list of folders with item counts
+   - Tap folder = filtered view of Home screen
+   - "Uncategorized" default folder for unsorted items
+
+4. Settings
+   - Free vs Premium status indicator
+   - Upgrade button (opens paywall)
+   - iCloud/Google Drive sync toggle (premium only — show locked state for 
+     free users)
+   - Export all data as JSON
+   - About/support link
+
+PAYWALL SCREEN
+- Clean, single-screen paywall (not aggressive/interruptive)
+- Headline: "Never lose a snippet again"
+- 3 bullet benefits: Unlimited snippets, Unlimited folders, Cloud sync across 
+  devices
+- Two pricing options: Monthly ($4.99) and Yearly ($19.99, show "Save 66%" 
+  badge)
+- "Start Free Trial" button if trial is configured, else "Subscribe"
+- Small "Restore Purchases" link at bottom
+- Close (X) button top-right, always visible, never force the paywall to be 
+  undismissable
+
+FREEMIUM LOGIC
+- Free tier: max 20 saved snippets, 1 folder only (Uncategorized)
+- When free user hits the 20-item limit, show a soft inline banner ("You've 
+  hit your free limit — upgrade for unlimited snippets") instead of a hard 
+  block, with a button to open the paywall
+- When free user tries to create a 2nd folder, open the paywall directly
+- Premium unlocks: unlimited snippets, unlimited folders, cloud sync
+
+SMART FEATURES (keep genuinely light, not gimmicky)
+- Auto-detect content type via simple pattern matching:
+  - Starts with http/https → treat as Link, show favicon if possible
+  - Contains common code patterns (indentation, brackets, semicolons, 
+    keywords like function/const/def/class) → treat as Code, use monospace 
+    font in preview
+  - Otherwise → plain Text
+- "Smart paste": when adding a new snippet, if clipboard already has content, 
+  offer to prefill the input from clipboard automatically
+
+DESIGN DIRECTION
+- Clean, minimal, native-feeling UI — generous whitespace, clear typography 
+  hierarchy, no visual clutter
+- Support both light and dark mode
+- Use subtle animations for save/copy actions (small scale + fade, not 
+  flashy)
+- Icons should be simple line-style, consistent weight throughout
+- This app will be judged partly on visual polish, so prioritize a clean, 
+  professional aesthetic over adding more features
+
+DATA / STORAGE
+- Local-first storage (AsyncStorage or SQLite) for v1 — no backend required
+- Structure data so cloud sync can be added later without a rewrite: each 
+  snippet has id, content, type, title, folderId, tags[], createdAt, 
+  lastUsedAt
+
+MONETIZATION INTEGRATION
+- Integrate RevenueCat SDK for subscription management
+- Two products: monthly and annual subscription, gating premium features as 
+  described above
+- Wire up entitlement checks so premium features unlock immediately after 
+  purchase and on "Restore Purchases"
+
+Build this as a working, testable app — prioritize a fully functional and 
+polished v1 over extra features. Do not add onboarding tutorials, social 
+sharing, or account/login systems for this version.
