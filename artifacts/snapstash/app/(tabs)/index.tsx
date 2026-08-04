@@ -17,12 +17,78 @@ import { useApp } from '@/context/AppContext';
 import SnippetCard from '@/components/SnippetCard';
 import { FREE_SNIPPET_LIMIT } from '@/lib/types';
 
+// ─── Empty state ──────────────────────────────────────────────────────────────
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  const colors = useColors();
+  return (
+    <View style={styles.emptyWrap}>
+      {/* Glow orb */}
+      <View style={[styles.emptyOrb, { backgroundColor: colors.primary + '18' }]}>
+        <View style={[styles.emptyOrbInner, { backgroundColor: colors.primary + '2E' }]}>
+          <Feather name="archive" size={32} color={colors.primary} />
+        </View>
+      </View>
+
+      {/* Content-type chips */}
+      <View style={styles.emptyChips}>
+        {[
+          { icon: 'type' as const,   label: 'Text' },
+          { icon: 'link' as const,   label: 'Link' },
+          { icon: 'code' as const,   label: 'Code' },
+        ].map(({ icon, label }) => (
+          <View
+            key={label}
+            style={[styles.emptyChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+          >
+            <Feather name={icon} size={11} color={colors.mutedForeground} />
+            <Text style={[styles.emptyChipText, { color: colors.mutedForeground }]}>{label}</Text>
+          </View>
+        ))}
+      </View>
+
+      <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
+        Your stash is empty
+      </Text>
+      <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
+        Save snippets, links, and code{'\n'}you actually want to find again
+      </Text>
+
+      <TouchableOpacity
+        style={[styles.emptyCtaBtn, {
+          backgroundColor: colors.primary,
+          shadowColor: colors.primary,
+        }]}
+        onPress={onAdd}
+        activeOpacity={0.85}
+      >
+        <Feather name="plus" size={15} color={colors.primaryForeground} />
+        <Text style={[styles.emptyCtaBtnText, { color: colors.primaryForeground }]}>
+          Start stashing
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function NoResults({ query }: { query: string }) {
+  const colors = useColors();
+  return (
+    <View style={styles.emptyWrap}>
+      <Feather name="search" size={40} color={colors.border} />
+      <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No results</Text>
+      <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
+        Nothing matched "{query}"
+      </Text>
+    </View>
+  );
+}
+
+// ─── Screen ───────────────────────────────────────────────────────────────────
 export default function LibraryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { snippets, isLoading, canAddSnippet, isPremium } = useApp();
-  const limit = FREE_SNIPPET_LIMIT;
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -49,6 +115,14 @@ export default function LibraryScreen() {
   const tabBarH = Platform.OS === 'web' ? 84 : 49 + insets.bottom;
   const fabBottom = tabBarH + 16;
 
+  const handleAdd = () => {
+    if (!canAddSnippet) {
+      router.push('/paywall');
+      return;
+    }
+    router.push('/edit');
+  };
+
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       {/* Header */}
@@ -67,8 +141,10 @@ export default function LibraryScreen() {
             SnapStash
           </Text>
           {snippets.length > 0 && (
-            <View style={[styles.countBadge, { backgroundColor: colors.primary }]}>
-              <Text style={styles.countText}>{snippets.length}</Text>
+            <View style={[styles.countBadge, { backgroundColor: colors.primary + '22' }]}>
+              <Text style={[styles.countText, { color: colors.primary }]}>
+                {snippets.length}
+              </Text>
             </View>
           )}
         </View>
@@ -97,7 +173,7 @@ export default function LibraryScreen() {
       </View>
 
       {/* Free limit banner */}
-      {!isPremium && snippets.length >= limit && (
+      {!isPremium && snippets.length >= FREE_SNIPPET_LIMIT && (
         <TouchableOpacity
           style={[styles.limitBanner, { backgroundColor: colors.primary + '15' }]}
           onPress={() => router.push('/paywall')}
@@ -116,17 +192,13 @@ export default function LibraryScreen() {
         <View style={styles.centered}>
           <ActivityIndicator color={colors.primary} size="large" />
         </View>
+      ) : sorted.length === 0 && !query ? (
+        <View style={styles.centered}>
+          <EmptyState onAdd={handleAdd} />
+        </View>
       ) : sorted.length === 0 ? (
         <View style={styles.centered}>
-          <Feather name="archive" size={52} color={colors.border} />
-          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-            {query ? 'No results' : 'Nothing stashed yet'}
-          </Text>
-          <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
-            {query
-              ? `No snippets match "${query}"`
-              : 'Tap + to save your first snippet'}
-          </Text>
+          <NoResults query={query} />
         </View>
       ) : (
         <FlatList
@@ -159,16 +231,10 @@ export default function LibraryScreen() {
             shadowColor: colors.primary,
           },
         ]}
-        onPress={() => {
-          if (!canAddSnippet) {
-            router.push('/paywall');
-            return;
-          }
-          router.push('/edit');
-        }}
+        onPress={handleAdd}
         activeOpacity={0.85}
       >
-        <Feather name="plus" size={26} color="#FFFFFF" />
+        <Feather name="plus" size={26} color={colors.primaryForeground} />
       </TouchableOpacity>
     </View>
   );
@@ -188,19 +254,18 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   appTitle: {
-    fontSize: 26,
+    fontSize: 30,
     fontFamily: 'Inter_700Bold',
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
   },
   countBadge: {
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
   },
   countText: {
-    color: '#FFF',
     fontSize: 12,
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Inter_700Bold',
   },
   searchBar: {
     flexDirection: 'row',
@@ -234,20 +299,78 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
     paddingBottom: 80,
   },
+  // ── Empty state ──
+  emptyWrap: {
+    alignItems: 'center',
+    gap: 0,
+    paddingHorizontal: 32,
+  },
+  emptyOrb: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyOrbInner: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyChips: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 20,
+  },
+  emptyChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  emptyChipText: {
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
+  },
   emptyTitle: {
-    fontSize: 17,
-    fontFamily: 'Inter_600SemiBold',
-    marginTop: 8,
+    fontSize: 20,
+    fontFamily: 'Inter_700Bold',
+    letterSpacing: -0.4,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   emptySub: {
     fontSize: 14,
     fontFamily: 'Inter_400Regular',
     textAlign: 'center',
-    paddingHorizontal: 40,
+    lineHeight: 20,
+    marginBottom: 24,
   },
+  emptyCtaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.30,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  emptyCtaBtnText: {
+    fontSize: 15,
+    fontFamily: 'Inter_600SemiBold',
+  },
+  // ── FAB ──
   fab: {
     position: 'absolute',
     right: 20,
@@ -257,7 +380,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.40,
     shadowRadius: 12,
     elevation: 8,
   },

@@ -8,15 +8,25 @@ import {
   Switch,
   Platform,
   Alert,
+  useColorScheme,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RevenueCatUI from 'react-native-purchases-ui';
 import { useColors } from '@/hooks/useColors';
 import { useApp } from '@/context/AppContext';
 import { useSubscription } from '@/lib/revenuecat';
 import { FREE_SNIPPET_LIMIT } from '@/lib/types';
+
+function SectionLabel({ label, colors }: { label: string; colors: any }) {
+  return (
+    <View style={[styles.sectionLabelRow, { borderTopColor: colors.border }]}>
+      <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>{label}</Text>
+    </View>
+  );
+}
 
 function SettingRow({
   icon,
@@ -45,7 +55,7 @@ function SettingRow({
         },
       ]}
     >
-      <View style={[styles.rowIcon, { backgroundColor: (iconColor ?? colors.primary) + '18' }]}>
+      <View style={[styles.rowIcon, { backgroundColor: (iconColor ?? colors.primary) + '1A' }]}>
         <Feather name={icon as any} size={16} color={iconColor ?? colors.primary} />
       </View>
       <View style={styles.rowText}>
@@ -70,6 +80,8 @@ function SettingRow({
 
 export default function SettingsScreen() {
   const colors = useColors();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { snippets, folders } = useApp();
@@ -79,7 +91,7 @@ export default function SettingsScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 84 + 20 : insets.bottom + 80;
 
-  // Subscription expiry (for active subscriptions, not lifetime)
+  // Subscription expiry
   const activeEntitlement = customerInfo?.entitlements.active['SnapStash Pro'];
   const expiryDate = activeEntitlement?.expirationDate
     ? new Date(activeEntitlement.expirationDate).toLocaleDateString(undefined, {
@@ -88,6 +100,11 @@ export default function SettingsScreen() {
         year: 'numeric',
       })
     : null;
+
+  // Amber gradient stops matched to dark/light palette
+  const upgradeGradient: [string, string] = isDark
+    ? ['#F5A623', '#C97810']
+    : ['#C97810', '#E8A520'];
 
   const handleManageSubscription = async () => {
     if (Platform.OS === 'web') {
@@ -111,7 +128,6 @@ export default function SettingsScreen() {
   };
 
   const handleExport = () => {
-    const data = JSON.stringify({ snippets, folders, exportedAt: new Date().toISOString() }, null, 2);
     Alert.alert(
       'Export Data',
       `Your data includes ${snippets.length} snippets and ${folders.length} folders.\n\n(Full file export coming soon.)`,
@@ -140,13 +156,13 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Plan card */}
-        <View style={styles.section}>
+        <View style={styles.sectionPad}>
           <View
             style={[
               styles.planCard,
               {
-                backgroundColor: isPremium ? colors.primary : colors.card,
-                borderColor: isPremium ? colors.primary : colors.border,
+                backgroundColor: isPremium ? colors.primary + '18' : colors.card,
+                borderColor: isPremium ? colors.primary + '60' : colors.border,
               },
             ]}
           >
@@ -154,85 +170,76 @@ export default function SettingsScreen() {
               <View style={styles.planTitleRow}>
                 <Feather
                   name={isPremium ? 'star' : 'user'}
-                  size={18}
-                  color={isPremium ? '#FFFFFF' : colors.primary}
+                  size={17}
+                  color={isPremium ? colors.primary : colors.mutedForeground}
                 />
-                <Text
-                  style={[
-                    styles.planTitle,
-                    { color: isPremium ? '#FFFFFF' : colors.foreground },
-                  ]}
-                >
+                <Text style={[styles.planTitle, { color: colors.foreground }]}>
                   {isPremium ? 'SnapStash Pro' : 'Free Plan'}
                 </Text>
+                {isPremium && (
+                  <View style={[styles.proBadge, { backgroundColor: colors.primary + '20' }]}>
+                    <Text style={[styles.proBadgeText, { color: colors.primary }]}>ACTIVE</Text>
+                  </View>
+                )}
               </View>
-              <Text
-                style={[
-                  styles.planSub,
-                  { color: isPremium ? 'rgba(255,255,255,0.75)' : colors.mutedForeground },
-                ]}
-              >
+              <Text style={[styles.planSub, { color: colors.mutedForeground }]}>
                 {isPremium
                   ? expiryDate
                     ? `Renews ${expiryDate}`
-                    : 'Unlimited snippets · Unlimited folders · Cloud sync'
+                    : 'Unlimited snippets · Unlimited folders'
                   : `${snippets.length} / ${FREE_SNIPPET_LIMIT} snippets · 1 folder`}
               </Text>
             </View>
+
             {!isPremium && (
-              <TouchableOpacity
-                style={[styles.upgradeBtn, { backgroundColor: colors.primary }]}
-                onPress={() => router.push('/paywall')}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.upgradeBtnText}>Upgrade</Text>
+              <TouchableOpacity onPress={() => router.push('/paywall')} activeOpacity={0.85}>
+                <LinearGradient
+                  colors={upgradeGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[
+                    styles.upgradeBtn,
+                    {
+                      shadowColor: colors.primary,
+                      shadowOffset: { width: 0, height: 3 },
+                      shadowOpacity: 0.45,
+                      shadowRadius: 7,
+                      elevation: 4,
+                    },
+                  ]}
+                >
+                  <Feather name="zap" size={13} color="#FFF" />
+                  <Text style={styles.upgradeBtnText}>Upgrade</Text>
+                </LinearGradient>
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* Subscription management (shown when subscribed) */}
-        {isPremium && (
-          <>
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>SUBSCRIPTION</Text>
-            <View style={styles.section}>
-              <SettingRow
-                icon="settings"
-                label="Manage Subscription"
-                sublabel="Cancel, pause, or change your plan"
-                onPress={handleManageSubscription}
-                colors={colors}
-              />
-              <SettingRow
-                icon="refresh-ccw"
-                label="Restore Purchases"
-                sublabel={isRestoring ? 'Restoring…' : 'Reconnect on a new device'}
-                onPress={isRestoring ? undefined : handleRestore}
-                colors={colors}
-              />
-            </View>
-          </>
-        )}
+        {/* Subscription management */}
+        <SectionLabel label="SUBSCRIPTION" colors={colors} />
+        <View style={styles.sectionPad}>
+          {isPremium && (
+            <SettingRow
+              icon="settings"
+              label="Manage Subscription"
+              sublabel="Cancel, pause, or change your plan"
+              onPress={handleManageSubscription}
+              colors={colors}
+            />
+          )}
+          <SettingRow
+            icon="refresh-ccw"
+            label="Restore Purchases"
+            sublabel={isRestoring ? 'Restoring…' : isPremium ? 'Reconnect on a new device' : 'Already subscribed? Restore here'}
+            onPress={isRestoring ? undefined : handleRestore}
+            colors={colors}
+          />
+        </View>
 
-        {/* Restore for free users */}
-        {!isPremium && (
-          <>
-            <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>SUBSCRIPTION</Text>
-            <View style={styles.section}>
-              <SettingRow
-                icon="refresh-ccw"
-                label="Restore Purchases"
-                sublabel={isRestoring ? 'Restoring…' : 'Already subscribed? Restore here'}
-                onPress={isRestoring ? undefined : handleRestore}
-                colors={colors}
-              />
-            </View>
-          </>
-        )}
-
-        {/* Storage section */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>STORAGE</Text>
-        <View style={styles.section}>
+        {/* Storage */}
+        <SectionLabel label="STORAGE" colors={colors} />
+        <View style={styles.sectionPad}>
           <SettingRow
             icon="cloud"
             label="iCloud / Google Drive Sync"
@@ -244,9 +251,7 @@ export default function SettingsScreen() {
                 value={false}
                 disabled={!isPremium}
                 trackColor={{ false: colors.border, true: colors.primary }}
-                onValueChange={() =>
-                  Alert.alert('Cloud Sync', 'Cloud sync coming soon!')
-                }
+                onValueChange={() => Alert.alert('Cloud Sync', 'Cloud sync coming soon!')}
               />
             }
           />
@@ -259,14 +264,14 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* About section */}
-        <Text style={[styles.sectionLabel, { color: colors.mutedForeground }]}>ABOUT</Text>
-        <View style={styles.section}>
+        {/* About */}
+        <SectionLabel label="ABOUT" colors={colors} />
+        <View style={styles.sectionPad}>
           <SettingRow
             icon="info"
             label="Version"
             sublabel="1.0.0"
-            right={<Text style={{ color: colors.mutedForeground, fontSize: 14 }}>1.0.0</Text>}
+            right={<Text style={[styles.versionText, { color: colors.mutedForeground }]}>1.0.0</Text>}
             colors={colors}
           />
           <SettingRow
@@ -290,9 +295,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   title: {
-    fontSize: 26,
+    fontSize: 30,
     fontFamily: 'Inter_700Bold',
-    letterSpacing: -0.5,
+    letterSpacing: -0.8,
+  },
+  sectionLabelRow: {
+    marginTop: 32,
+    marginBottom: 8,
+    marginHorizontal: 20,
+    paddingTop: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 16,
+  } as any,
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: 'Inter_600SemiBold',
+    letterSpacing: 1.0,
+  },
+  sectionPad: {
+    marginHorizontal: 16,
+    borderRadius: 14,
+    overflow: 'hidden',
+    gap: 1,
   },
   planCard: {
     flexDirection: 'row',
@@ -307,11 +331,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 5,
   },
   planTitle: {
     fontSize: 16,
     fontFamily: 'Inter_700Bold',
+  },
+  proBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  proBadgeText: {
+    fontSize: 9,
+    fontFamily: 'Inter_700Bold',
+    letterSpacing: 0.8,
   },
   planSub: {
     fontSize: 13,
@@ -319,7 +353,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   upgradeBtn: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: 20,
   },
@@ -327,20 +364,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 14,
     fontFamily: 'Inter_600SemiBold',
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: 'Inter_600SemiBold',
-    letterSpacing: 0.8,
-    paddingHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  section: {
-    marginHorizontal: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-    gap: 1,
   },
   row: {
     flexDirection: 'row',
@@ -367,5 +390,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Inter_400Regular',
     marginTop: 1,
+  },
+  versionText: {
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
   },
 });

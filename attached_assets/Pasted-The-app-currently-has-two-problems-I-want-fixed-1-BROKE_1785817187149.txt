@@ -1,0 +1,41 @@
+The app currently has two problems I want fixed:
+
+1. BROKEN ICONS: Several icons are showing as broken boxes/placeholder 
+   glyphs instead of actual icons (visible in the search bar, Settings rows, 
+   and bottom tab bar). Please check the icon library being used and fix 
+   these — make sure the icon font/package is properly linked and every 
+   icon renders correctly.
+
+2. VISUAL DESIGN: The app currently looks like a generic AI-generated dark 
+   template. I want it to feel more distinct and polished. Please:
+
+   - Replace the default purple/violet accent color with a warmer, more 
+     distinctive accent — a deep amber/gold (#F5A623 or similar) works well 
+     for a "stash/save" concept, used consistently for: the floating action 
+     button, active tab state, premium badges, and primary buttons only 
+     (don't overuse it)
+   
+   - Improve typography hierarchy: screen titles (like "Settings", 
+     "Library") should be bold and larger than they are now; body text and 
+     secondary labels (like "0/20 snippets") should be visibly lighter/more 
+     muted than primary text, not just a slightly different shade
+   
+   - Redesign the empty state on the Library screen: instead of a faded 
+     icon and flat text, add a bit more visual interest — a subtle 
+     illustration or icon treatment with some depth (soft shadow or glow), 
+     and make the "Tap + to save your first snippet" text feel like an 
+     inviting call-to-action rather than an instruction
+   
+   - On the Settings screen, add subtle visual separation between sections 
+     (SUBSCRIPTION, STORAGE, ABOUT) — slightly more spacing and maybe a 
+     faint divider, so it doesn't read as one long uniform list
+   
+   - Give the "Upgrade" button on the Free Plan card a bit more visual 
+     weight — right now it's a plain pill button; make it feel like the 
+     premium upsell moment it is, e.g. a subtle gradient or glow using the 
+     new accent color
+
+   - Keep dark mode as the primary theme, but make sure light mode (if 
+     implemented) follows the same accent and hierarchy rules
+
+Don't change any functionality — this is a visual/styling pass only.
