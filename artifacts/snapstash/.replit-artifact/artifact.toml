@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/"
+title = "SnapStash"
+description = "SnapStash is a fast snippet manager for iOS and Android. Users can save and retrieve reusable text, links, code, and images. Features smart content type detection, folder organization, instant clipboard copy, and freemium subscriptions via RevenueCat."
+version = "1.0.0"
+id = "artifacts/snapstash"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 22686
+
+[services.development]
+run = "pnpm --filter @workspace/snapstash run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/snapstash", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/snapstash", "run", "serve" ]
+
+[services.env]
+PORT = "22686"
+BASE_PATH = "/"

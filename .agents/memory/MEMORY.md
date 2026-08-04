@@ -1,0 +1,1 @@
+- [RevenueCat — SnapStash](revenuecat-snapstash.md) — entitlement ID, key env var names, provider order, Metro blockList fix, RC dashboard checklist.
