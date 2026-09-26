@@ -42,20 +42,49 @@ SnapStash uses a freemium model powered by [RevenueCat](https://www.revenuecat.c
 
 ## Getting started
 
-This project uses Expo. To run it locally:
+SnapStash is a [pnpm](https://pnpm.io/) workspace. The Expo app lives in
+`artifacts/snapstash`. Snippets are stored on the device, so no backend is
+needed to run it.
+
+Requirements: Node.js 20.19+ (Expo SDK 54) and pnpm 10.16+ for the
+workspace's `minimumReleaseAge` setting (`npm install -g pnpm@latest`).
+Installing with npm or yarn is blocked by the workspace's `preinstall`
+check.
 
 ```bash
 git clone https://github.com/ShambhaviCode/snapstash.git
 cd snapstash
-npm install
-npx expo start
+pnpm install
+
+cd artifacts/snapstash
+cp .env.example .env   # optional: add a RevenueCat key to test purchases
+pnpm exec expo start
 ```
 
-Scan the QR code with the **Expo Go** app on your phone to preview.
+Scan the QR code with the **Expo Go** app on your phone, or press `w` to
+open the web build.
+
+> `pnpm run dev` inside `artifacts/snapstash` is wired to Replit's
+> environment variables; use `pnpm exec expo start` when running locally.
 
 ### Environment variables
 
-You'll need a RevenueCat account and API keys to enable the paywall.
+The paywall uses RevenueCat. The app reads these from
+`artifacts/snapstash/.env`:
+
+| Variable | When it is used |
+| --- | --- |
+| `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` | Development, Expo Go and web |
+| `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` | Production iOS builds (falls back to the test key) |
+| `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY` | Production Android builds (falls back to the test key) |
+
+Without a key, RevenueCat isn't initialised: development builds log a
+warning and the app runs on the free plan with purchases unavailable, while
+production builds show a "RevenueCat Unavailable" alert.
+
+To test the paywall, create a free RevenueCat project and copy its test-store API key from
+**Project settings → API keys**. The entitlement the app checks is named
+`SnapStash Pro`.
 
 ## License
 
