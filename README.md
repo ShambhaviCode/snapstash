@@ -57,7 +57,7 @@ cd snapstash
 pnpm install
 
 cd artifacts/snapstash
-cp .env.example .env   # then add your RevenueCat key (see below)
+cp .env.example .env   # optional: add a RevenueCat key to test purchases
 pnpm exec expo start
 ```
 
@@ -74,11 +74,15 @@ The paywall uses RevenueCat. The app reads these from
 
 | Variable | When it is used |
 | --- | --- |
-| `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` | Development, Expo Go and web. **Required**: the app throws on startup without it. |
+| `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` | Development, Expo Go and web |
 | `EXPO_PUBLIC_REVENUECAT_IOS_API_KEY` | Production iOS builds (falls back to the test key) |
 | `EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY` | Production Android builds (falls back to the test key) |
 
-Create a free RevenueCat project and copy its test-store API key from
+Without a key, RevenueCat isn't initialised: development builds log a
+warning and the app runs on the free plan with purchases unavailable, while
+production builds show a "RevenueCat Unavailable" alert.
+
+To test the paywall, create a free RevenueCat project and copy its test-store API key from
 **Project settings → API keys**. The entitlement the app checks is named
 `SnapStash Pro`.
 
